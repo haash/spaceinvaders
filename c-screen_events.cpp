@@ -1,6 +1,7 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 #include <curses.h>
+#include <cstdlib>
 
 #include "c-globals.h"
 
@@ -225,6 +226,56 @@ void screenEvents::setupGame() {
   data::player->setY(LINES - 4);
 
   this->setScreen('g');
+}
+
+void screenEvents::die() {
+  this->preNewScreen();
+  int window_start_x = COLS / 6;
+  int window_width = 4 * COLS / 6;
+  WINDOW *main = this->createWindowWithBorder(8, window_width,
+                                              LINES / 2 - 4, window_start_x);
+
+  this->printCenter(main, 2, "You have died.");
+
+  this->printWrapped(main, 4, 2, 
+    "Press \"x\" or \"q\" to quit the game. Otherwise, press any key to "
+    "go back to the menu.");
+
+  wrefresh(main);
+  this->setScreen('d');
+}
+
+void screenEvents::win() {
+  this->preNewScreen();
+
+  srand(time(NULL));
+
+  WINDOW *bg = this->createWindow(LINES, COLS, 0, 0);
+  for (int y = 0; y < LINES; ++y) {
+    for (int x = 0; x < COLS; ++x) {
+      char star = ' ';
+      if (rand() % 2 == 1) {
+        star = '*';
+      }
+      mvwaddch(bg, y, x, star);
+    }
+  }
+
+  int window_start_x = COLS / 6;
+  int window_width = 4 * COLS / 6;
+  WINDOW *main = this->createWindowWithBorder(8, window_width,
+                                              LINES / 2 - 4, window_start_x);
+
+  this->printCenter(main, 2, "Congratulations, you won!");
+
+  this->printWrapped(main, 4, 2, 
+    "Press \"x\" or \"q\" to quit the game. Otherwise, press any key to "
+    "go back to the menu.");
+
+  wrefresh(main);
+
+  // use same screen keyhandlers as the death screen.
+  this->setScreen('d');
 }
 
 screenEvents::screenEvents() {

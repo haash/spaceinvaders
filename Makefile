@@ -4,7 +4,9 @@ all: build
 #  Directory specification.
 # ==========================
 
-COMPILER_FLAGS := -Wall -Wfatal-errors
+# I HEARD YOU LIKE TO BE PEDANTIC, YO
+# hardmode = activate
+COMPILER_FLAGS := -Wall -Wfatal-errors -Wextra
 
 CLASS_HFILES := $(wildcard c-*.h)
 CLASS_OFILES = $(CLASS_HFILES:.h=.o)

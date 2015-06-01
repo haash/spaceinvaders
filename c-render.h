@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_RENDERENGINE__
 #define __INCLUDE_RENDERENGINE__
 
-#include <ncurses.h>
+#include <curses.h>
 
 struct renderEngine {
   void renderBraniacs(WINDOW*);

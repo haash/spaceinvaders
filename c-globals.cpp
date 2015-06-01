@@ -1,7 +1,8 @@
-// maximum fps, set to maybe double expected fps
+// Theoretical maximum fps, set to maybe double expected fps.
 #define FPS_HARDCAP 100
+
 // number of frames before enemies move
-#define ENEMY_MS 15
+#define ENEMY_MS 12
 
 // Apparently required for nanosleep, although seems to work
 // on all the systems I've tried without directly including the library...
@@ -32,95 +33,111 @@ namespace data {
   lander *landers = new lander[5];
   tank *tanks = new tank[5];
 
-  int *lastEnemyMove = new int(0); // 5fps ago
+  // Tracks how many frames since the enemies' last move.
+  // Delay until next move #defined as ENEMY_MS
+  int *lastEnemyMove = new int(0);
 
   playerShip *player = new playerShip();
 }
 
 namespace drivers {
-  // driver used by screen thread
-  void *screen(void *nothing) {
+  void *screen(void*);
+  void *process(void*);
+};
 
-    // === Initialise time delays ===
-    struct timespec delay, delay2;
-    delay.tv_sec = 0;
-    delay.tv_nsec = 1000000000 / FPS_HARDCAP;
+// driver used by screen thread
+void *drivers::screen(void *nothing) {
 
-    // === Start our screen rendering engine ===
-    while (true) {
-      switch (glib::screenHandle->getCurrentScreen()) {
-        case 'm': // Menu screen.
-          // No update, should be initialised in pre-call, see
-          // "glib::screenHandle->menu()".
-          break;
+  // === Initialise time delays ===
+  struct timespec delay, delay2;
+  delay.tv_sec = 0;
+  delay.tv_nsec = 1000000000 / FPS_HARDCAP;
 
-        case 'g': // Main game screen.
-          /*
-           * Main Game Render Function Heirachy:
-           *   1. Setup Screen
-           *   2. Render Enemies on Screen
-           *   3. Render Player on Screen
-           *   4. Render Bullets on Screen
-           *   5. Refresh Window
-           */
+  // === Start our screen rendering engine ===
+  while (true) {
+    switch (glib::screenHandle->getCurrentScreen()) {
+      case 'm': // Menu screen.
+        // No update, should be initialised in pre-call, see
+        // "glib::screenHandle->menu()".
+        break;
 
-          // === 1. Setup Screen ===
-          WINDOW* window = glib::screenHandle->getMainWindow();
-          werase(window);
-          glib::screenHandle->drawBorder(window, '+', '|', '-');
+      case 'd':
+        // No update, should be initialised in pre-call, see
+        // "glib::screenHandle->die()" or "->win()".
+        break;
 
-          // === 2. Render Enemies on Screen ===
-          glib::render->renderEnemies(window);
-          
-          // === 3. Render Player on Screen ===
-          glib::render->renderPlayer(window);
+      case 'g': // Main game screen.
+        /*
+         * Main Game Render Function Heirachy:
+         *   1. Setup Screen
+         *   2. Render Enemies on Screen
+         *   3. Render Player on Screen
+         *   4. Render Bullets on Screen
+         *   5. Refresh Window
+         */
 
-          // === 4. Render Bullets on Screen ===
+        // === 1. Setup Screen ===
+        WINDOW* window = glib::screenHandle->getMainWindow();
+        werase(window);
+        glib::screenHandle->drawBorder(window, '+', '|', '-');
 
-          // === 5. Refresh Window ===
-          // Slight fix for windows, which doesnt hide the cursor.
-          wmove(window, 0, 0);
+        // === 1(a). Testing Phase ===
+        // mvwprintw(window, 0, 0, "%i %i", data::landers[0].getY(), data::player->getY() - 2);
 
-          wrefresh(window);
+        // === 2. Render Enemies on Screen ===
+        glib::render->renderEnemies(window);
+        
+        // === 3. Render Player on Screen ===
+        glib::render->renderPlayer(window);
 
-          break; // end case (game currentScreen == game screen)
+        // === 4. Render Bullets on Screen ===
 
-      } // end current screen switch statement
+        // === 5. Refresh Window ===
+        // Slight fix for windows, which doesnt hide the cursor.
+        wmove(window, 0, 0);
 
-      // implement FPS cap delay
-      nanosleep(&delay, &delay2);
-    } // end our while loop
+        wrefresh(window);
 
-    return (void*) 1; // -Wall requires return
-  }
+        break; // end case (game currentScreen == game screen)
 
-  // driver used by process thread
-  void *process(void *nothing) {
+    } // end current screen switch statement
 
-    // === Initialise time delays and grab the listener window ===
-    struct timespec delay, delay2;
-    delay.tv_sec = 0;
-    delay.tv_nsec = 1000000000 / FPS_HARDCAP;
+    // implement FPS cap delay
+    nanosleep(&delay, &delay2);
+  } // end our while loop
 
-    WINDOW* listener = glib::screenHandle->getListener();
+  return nothing; // -Wall requires return
+}
 
-    // === Start our I/O process ===
-    while (true) {
+// driver used by process thread
+void *drivers::process(void *nothing) {
 
-      /*
-       * Function heirachy:
-       *   1. Process input data/move player
-       *   2. Move Enemies
-       *   3. Move Bullets
-       *   4. Check if bullets hit target and process
-       */
+  // === Initialise time delays and grab the listener window ===
+  struct timespec delay, delay2;
+  delay.tv_sec = 0;
+  delay.tv_nsec = 1000000000 / FPS_HARDCAP;
 
-      // === 1. Process input data/move player ===
-      int ch = wgetch(listener);
-      if (ch != ERR) {
-        glib::keyHandle->handleKey(ch);
-      }
+  WINDOW* listener = glib::screenHandle->getListener();
 
+  // === Start our I/O process ===
+  while (true) {
+
+    /*
+     * Function heirachy:
+     *   1. Process input data/move player
+     * (Note : Following functions only to be run if in-game)
+     *   2. Move Enemies
+     *   3. Move Bullets
+     *   4. Check if bullets hit target and process
+     */
+
+    // === 1. Process input data/move player ===
+    int ch = wgetch(listener);
+    if (ch != ERR) {
+      glib::keyHandle->handleKey(ch);
+    }
+
+    if (glib::screenHandle->getCurrentScreen() == 'g') {
       // === 2. Move Enemies ===
       int *lem = data::lastEnemyMove;
       (*lem)++;
@@ -134,10 +151,9 @@ namespace drivers {
         int x1 = data::braniacs[0].getX();
         int x5 = data::braniacs[4].getX();
 
-        if (((ms > 0) && (x5 + ms > COLS - 8)) ||
-            ((ms < 0) && (x1 + ms < 6)))
+        if (((ms > 0) && (x5 + ms > COLS - 6)) ||
+            ((ms < 0) && (x1 + ms < 5)))
         {
-          mvwprintw(glib::screenHandle->getMainWindow(), 0, 0, "%i %i", x5 + ms, LINES - 5);
           for (int i = 0; i < 5; ++i) {
             // All classes should have the same movespeed.
             data::braniacs[i].setMoveSpeed(-1 * ms);
@@ -153,17 +169,52 @@ namespace drivers {
 
         // Move the enemy to the left/right. Use entity::moveRight()
         // because we invert the movement speed in the previous block of code.
+        // Also at this point, we're going to check if the game is complete
+        // or not, if the enemies have reached the player, or the player
+        // has killed all the enemies.
+        bool braniacs_alive = 0;
+        bool tanks_alive = 0;
+        bool landers_alive = 0;
+
+        int braniacs_y = data::braniacs[0].getY();
+        int tanks_y = data::landers[0].getY();
+        int landers_y = data::landers[0].getY();
+
         for (int i = 0; i < 5; ++i) {
           data::braniacs[i].setX(data::braniacs[i].getX() + ms);
-          data::landers[i].setX(data::landers[i].getX() + ms);
+          if (!data::braniacs[i].isDead()) {
+            braniacs_alive++;
+          }
+          
           data::tanks[i].setX(data::tanks[i].getX() + ms);
-        }
-      }
+          if (!data::tanks[i].isDead()) {
+            tanks_alive++;
+          }
 
-      // implement FPS cap delay
-      nanosleep(&delay, &delay2);
+          data::landers[i].setX(data::landers[i].getX() + ms);
+          if (!data::landers[i].isDead()) {
+            landers_alive++;
+          }
+        }
+
+        if (!braniacs_alive && !landers_alive && !tanks_alive) {
+          // do end of game screen
+        }
+
+        if (landers_alive && landers_y >= data::player->getY() - 2) {
+          glib::screenHandle->die();
+        } else if (tanks_alive && tanks_y >= data::player->getY() - 2) {
+          glib::screenHandle->die();
+        } else if (braniacs_alive && braniacs_y >= data::player->getY() - 2) {
+          glib::screenHandle->die();
+        }
+
+      }
     }
 
-    return (void*) 1; // -Wall requires return
+    // implement FPS cap delay
+    nanosleep(&delay, &delay2);
   }
-};
+
+  return nothing; // -Wall requires return
+}

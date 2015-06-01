@@ -39,6 +39,8 @@ public:
   
   void menu();
   void setupGame();
+  void die();
+  void win();
 
   screenEvents();
 };
