@@ -2,7 +2,7 @@
 #define FPS_HARDCAP 100
 
 // number of frames before enemies move
-#define ENEMY_MS 12
+#define ENEMY_MS 15
 
 // Apparently required for nanosleep, although seems to work
 // on all the systems I've tried without directly including the library...

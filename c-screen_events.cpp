@@ -2,6 +2,7 @@
 
 #include <curses.h>
 #include <cstdlib>
+#include <time.h>
 
 #include "c-globals.h"
 
@@ -254,12 +255,13 @@ void screenEvents::win() {
   for (int y = 0; y < LINES; ++y) {
     for (int x = 0; x < COLS; ++x) {
       char star = ' ';
-      if (rand() % 2 == 1) {
+      if (rand() % 3 == 1) {
         star = '*';
       }
       mvwaddch(bg, y, x, star);
     }
   }
+  wrefresh(bg);
 
   int window_start_x = COLS / 6;
   int window_width = 4 * COLS / 6;
