@@ -33,7 +33,7 @@ public:
   void move();
   void render(WINDOW*);
 
-  bool hitTest(entity*);
+  bool hitTest(const entity&, int, int) const;
   void onTick();
 
   void create(char, int, int, int, int, bool);

@@ -49,10 +49,10 @@ void bullet::render(WINDOW* window) {
   }
 }
 
-bool bullet::hitTest(entity* ent) {
-  if (ent->isAlive() &&
-      abs(this->getX() - ent->getX()) < 3 &&
-      abs(this->getY() - ent->getY()) < 2) {
+bool bullet::hitTest(const entity &ent, int distance_x, int distance_y) const {
+  if (ent.isAlive() &&
+      abs(this->getX() - ent.getX()) < distance_x &&
+      abs(this->getY() - ent.getY()) < distance_y) {
 
     return true;
   }
@@ -82,23 +82,22 @@ void bullet::onTick() {
   // Hit detection against enemies.
   if (this->direction < 0) {
     for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
-      if (this->hitTest(&data::landers[i])) {
+      if (this->hitTest(data::landers[i], 3, 2)) {
         data::landers[i].removeHealth(this->getDamage());
         this->blank();
         return;
-      } else if (this->hitTest(&data::tanks[i])) {
+      } else if (this->hitTest(data::tanks[i], 3, 2)) {
         data::tanks[i].removeHealth(this->getDamage());
         this->blank();
         return;
-      } else if (this->hitTest(&data::braniacs[i])) {
+      } else if (this->hitTest(data::braniacs[i], 3, 2)) {
         data::braniacs[i].removeHealth(this->getDamage());
         this->blank();
         return;
       }
     }
   } else { // Hit detection against the player.
-    if (abs(this_x - data::player->getX()) < 3 &&
-        abs(this_y - data::player->getY()) < 2) {
+    if (this->hitTest(*data::player, 3, 1)) {
 
       data::player->removeHealth(this->getDamage());
       this->blank();
