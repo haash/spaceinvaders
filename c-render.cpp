@@ -7,7 +7,7 @@
 
 void renderEngine::renderBraniacs(WINDOW* window) const {
   int start_x, start_y;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
     if (data::braniacs[i].isDead())
       continue;
 
@@ -25,7 +25,7 @@ void renderEngine::renderBraniacs(WINDOW* window) const {
 
 void renderEngine::renderLanders(WINDOW* window) const {
   int start_x, start_y;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
     if (data::landers[i].isDead())
       continue;
 
@@ -43,7 +43,7 @@ void renderEngine::renderLanders(WINDOW* window) const {
 
 void renderEngine::renderTanks(WINDOW* window) const {
   int start_x, start_y;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
     if (data::tanks[i].isDead())
       continue;
 

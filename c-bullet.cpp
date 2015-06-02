@@ -1,6 +1,7 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 #include <cstdlib>
+#include "config.h"
 
 #include "c-bullet.h"
 #include "c-globals.h"
@@ -48,12 +49,21 @@ void bullet::render(WINDOW* window) {
   }
 }
 
-bool bullet::onTick() {
-  // boolean return: should_die
+bool bullet::hitTest(entity* ent) {
+  if (ent->isAlive() &&
+      abs(this->getX() - ent->getX()) < 3 &&
+      abs(this->getY() - ent->getY()) < 2) {
 
+    return true;
+  }
+
+  return false;
+}
+
+void bullet::onTick() {
   // the bullet doesn't exist, just initialised
   if (this->getDisplay() == ' ') {
-    return false;
+    return;
   }
 
   this->last_move++;
@@ -65,30 +75,25 @@ bool bullet::onTick() {
   int this_y = this->getY();
 
   if (this_x < 2 || this_x > COLS || this_y < 2 || this_y > LINES) {
-    return true;
+    this->blank();
+    return;
   }
 
   // Hit detection against enemies.
   if (this->direction < 0) {
-    for (int i = 0; i < 5; ++i) {
-      if (data::landers[i].isAlive() &&
-          abs(this_x - data::landers[i].getX()) < 3 &&
-          abs(this_y - data::landers[i].getY()) < 2) {
-
+    for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
+      if (this->hitTest(&data::landers[i])) {
         data::landers[i].removeHealth(this->getDamage());
-        return true;
-      } else if (data::tanks[i].isAlive() &&
-                 abs(this_x - data::tanks[i].getX()) < 3 &&
-                 abs(this_y - data::tanks[i].getY()) < 2) {
-
+        this->blank();
+        return;
+      } else if (this->hitTest(&data::tanks[i])) {
         data::tanks[i].removeHealth(this->getDamage());
-        return true;
-      } else if (data::braniacs[i].isAlive() &&
-                 abs(this_x - data::braniacs[i].getX()) < 3 &&
-                 abs(this_y - data::braniacs[i].getY()) < 2) {
-
+        this->blank();
+        return;
+      } else if (this->hitTest(&data::braniacs[i])) {
         data::braniacs[i].removeHealth(this->getDamage());
-        return true;
+        this->blank();
+        return;
       }
     }
   } else { // Hit detection against the player.
@@ -96,11 +101,10 @@ bool bullet::onTick() {
         abs(this_y - data::player->getY()) < 2) {
 
       data::player->removeHealth(this->getDamage());
-      return true;
+      this->blank();
+      return;
     }
   }
-  
-  return false;
 }
 
 void bullet::create(char display, int pos_x, int pos_y, int damage, 

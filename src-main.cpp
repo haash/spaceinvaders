@@ -203,9 +203,7 @@ int main() {
 
         // === 3. Process Bullets ===
         for (int i = 0; i < MAX_BULLETS; ++i) {
-          if (data::bullets[i].onTick()) {
-            data::bullets[i].blank();
-          }
+          data::bullets[i].onTick();
         }
 
         // === 3a. Process Beam ===

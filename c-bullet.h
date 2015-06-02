@@ -3,6 +3,8 @@
 
 #include <curses.h>
 
+#include "c-entity.h"
+
 class bullet {
 private:
   char display;
@@ -31,7 +33,8 @@ public:
   void move();
   void render(WINDOW*);
 
-  bool onTick(); // boolean = should the caller delete the bullet?
+  bool hitTest(entity*);
+  void onTick();
 
   void create(char, int, int, int, int, bool);
   void blank();
