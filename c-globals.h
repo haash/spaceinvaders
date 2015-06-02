@@ -12,6 +12,7 @@
 #include "c-lander.h"
 #include "c-tank.h"
 #include "c-player_ship.h"
+#include "c-bullet.h"
 
 namespace glib {
   extern keyHandler *keyHandle;
@@ -25,11 +26,15 @@ namespace data {
   extern lander *landers;
   extern tank *tanks;
 
+  extern bullet *bullets;
+
   extern int *lastEnemyMove;
 
   extern playerShip *player; // undefined at this stage
+  extern int *beam_frames_rendered;
 };
 
+// Legacy, see "c-globals.cpp" for reference.
 namespace drivers {
   extern void *screen(void*);
   extern void *process(void*);

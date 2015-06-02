@@ -11,7 +11,7 @@ private:
   WINDOW* main_window;
 
 public:
-  char getCurrentScreen();
+  char getCurrentScreen() const;
   void setScreen(char);
 
   WINDOW* getListener();
@@ -25,17 +25,18 @@ public:
   void removeWindows(); // install gentoo
   bool removeWindow(WINDOW*);
 
-  void printCenter(WINDOW*, int, const char*);
-  int printWrapped(WINDOW*, int, int, const char*);
+  void printCenter(WINDOW*, int, const char*) const;
+  int printWrapped(WINDOW*, int, int, const char*) const;
 
-  void drawBorder(WINDOW*, char, char, char);
+  void drawBorder(WINDOW*, char, char, char) const;
 
   /*
    * Call this before any of the following functions.
    * It does things like initialise the listener, and 
    * clears the screen for future input.
    */
-  void preNewScreen(); 
+  void preNewScreen();
+  void generateBG(char);
   
   void menu();
   void setupGame();

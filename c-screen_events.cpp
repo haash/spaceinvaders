@@ -1,12 +1,15 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
+#include "config.h"
+
 #include <curses.h>
 #include <cstdlib>
-#include <time.h>
+#include <ctime>
+#include <cstring>
 
 #include "c-globals.h"
 
-char screenEvents::getCurrentScreen() {
+char screenEvents::getCurrentScreen() const {
   return this->current_screen;
 }
 
@@ -76,10 +79,8 @@ bool screenEvents::removeWindow(WINDOW* old_window) {
   return false; // doesn't exist
 }
 
-void screenEvents::printCenter(WINDOW *window, int y, const char *str) {
-  int length_str = 0;
-  while (str[length_str] != '\0')
-    length_str++;
+void screenEvents::printCenter(WINDOW *window, int y, const char *str) const {
+  int length_str = strlen(str);
 
   int w, h;
   getmaxyx(window, h, w);
@@ -91,10 +92,8 @@ void screenEvents::printCenter(WINDOW *window, int y, const char *str) {
 }
 
 int screenEvents::printWrapped(WINDOW *window, int y, int padding,
-                                const char *str) {
-  int length_str = 0;
-  while (str[length_str] != '\0')
-    length_str++;
+                                const char *str) const {
+  int length_str = strlen(str);
 
   int w, h;
   getmaxyx(window, h, w);
@@ -124,7 +123,7 @@ int screenEvents::printWrapped(WINDOW *window, int y, int padding,
 }
 
 void screenEvents::drawBorder(WINDOW *window, char corners, 
-                              char vertical, char horizontal) {
+                              char vertical, char horizontal) const {
   int w, h;
   getmaxyx(window, h, w);
 
@@ -153,12 +152,28 @@ void screenEvents::preNewScreen() {
   refresh();
 }
 
+void screenEvents::generateBG(char ch) {
+  srand(time(NULL));
+
+  WINDOW *bg = this->createWindow(LINES, COLS, 0, 0);
+  for (int y = 0; y < LINES; ++y) {
+    for (int x = 0; x < COLS; ++x) {
+      char star = ' ';
+      if (rand() % 3 == 1) {
+        star = ch;
+      }
+      mvwaddch(bg, y, x, star);
+    }
+  }
+  wrefresh(bg);
+}
+
 void screenEvents::menu() {
-
   this->preNewScreen();
+  this->generateBG('.');
 
-  int window_start_x = COLS / 6;
-  int window_width = 4 * COLS / 6;
+  int window_start_x = COLS / 8;
+  int window_width = 6 * COLS / 8;
 
   WINDOW *title_window = this->createWindowWithBorder(5, window_width, 0, 
                                                       window_start_x);
@@ -187,8 +202,8 @@ void screenEvents::menu() {
   
   mvwprintw(main_content, 0, 0, "%x", main_content);
 
-  WINDOW *copyright = this->createWindowWithBorder(7, window_width,
-                                                   current_y + 4 + 6, 
+  WINDOW *copyright = this->createWindowWithBorder(6, window_width,
+                                                   current_y + 10, 
                                                    window_start_x);
   current_y = this->printWrapped(copyright, 2, 2, 
     "Use WASD to control the ship, and spacebar to fire.");
@@ -207,11 +222,11 @@ void screenEvents::setupGame() {
   delete[] data::landers;
   delete[] data::tanks;
 
-  data::braniacs = new braniac[5];
-  data::landers = new lander[5];
-  data::tanks = new tank[5];
+  data::braniacs = new braniac[MAX_ENEMIES_PER_CLASS];
+  data::landers = new lander[MAX_ENEMIES_PER_CLASS];
+  data::tanks = new tank[MAX_ENEMIES_PER_CLASS];
 
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < MAX_ENEMIES_PER_CLASS; ++i) {
     data::braniacs[i].setX(5 + i * 7);
     data::landers[i].setX(5 + i * 7);
     data::tanks[i].setX(5 + i * 7);
@@ -222,15 +237,22 @@ void screenEvents::setupGame() {
     data::landers[i].setY(8);
   }
 
+  // setup bullets
+  delete[] data::bullets;
+  data::bullets = new bullet[MAX_BULLETS];
+
   // setup player
   data::player->setX(COLS / 2);
   data::player->setY(LINES - 4);
+  *(data::beam_frames_rendered) = 0;
 
   this->setScreen('g');
 }
 
 void screenEvents::die() {
   this->preNewScreen();
+  this->generateBG('x');
+
   int window_start_x = COLS / 6;
   int window_width = 4 * COLS / 6;
   WINDOW *main = this->createWindowWithBorder(8, window_width,
@@ -239,7 +261,7 @@ void screenEvents::die() {
   this->printCenter(main, 2, "You have died.");
 
   this->printWrapped(main, 4, 2, 
-    "Press \"x\" or \"q\" to quit the game. Otherwise, press any key to "
+    "Press \"x\" or \"q\" to quit the game. Otherwise, press \"m\" to "
     "go back to the menu.");
 
   wrefresh(main);
@@ -248,20 +270,7 @@ void screenEvents::die() {
 
 void screenEvents::win() {
   this->preNewScreen();
-
-  srand(time(NULL));
-
-  WINDOW *bg = this->createWindow(LINES, COLS, 0, 0);
-  for (int y = 0; y < LINES; ++y) {
-    for (int x = 0; x < COLS; ++x) {
-      char star = ' ';
-      if (rand() % 3 == 1) {
-        star = '*';
-      }
-      mvwaddch(bg, y, x, star);
-    }
-  }
-  wrefresh(bg);
+  this->generateBG('*');
 
   int window_start_x = COLS / 6;
   int window_width = 4 * COLS / 6;
@@ -271,7 +280,7 @@ void screenEvents::win() {
   this->printCenter(main, 2, "Congratulations, you won!");
 
   this->printWrapped(main, 4, 2, 
-    "Press \"x\" or \"q\" to quit the game. Otherwise, press any key to "
+    "Press \"x\" or \"q\" to quit the game. Otherwise, press \"m\" to "
     "go back to the menu.");
 
   wrefresh(main);

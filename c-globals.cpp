@@ -1,13 +1,9 @@
-// Theoretical maximum fps, set to maybe double expected fps.
-#define FPS_HARDCAP 100
-
-// number of frames before enemies move
-#define ENEMY_MS 15
-
 // Apparently required for nanosleep, although seems to work
 // on all the systems I've tried without directly including the library...
 #include <time.h>
 #include <string>
+
+#include "config.h"
 
 #include "c-key_handler.h"
 #include "c-screen_events.h"
@@ -20,6 +16,7 @@
 #include "c-lander.h"
 #include "c-swift.h"
 #include "c-tank.h"
+#include "c-bullet.h"
 
 namespace glib {
   keyHandler *keyHandle = new keyHandler();
@@ -29,16 +26,50 @@ namespace glib {
 };
 
 namespace data {
-  braniac *braniacs = new braniac[5];
-  lander *landers = new lander[5];
-  tank *tanks = new tank[5];
+  braniac *braniacs = new braniac[MAX_ENEMIES_PER_CLASS];
+  lander *landers = new lander[MAX_ENEMIES_PER_CLASS];
+  tank *tanks = new tank[MAX_ENEMIES_PER_CLASS];
+
+  bullet *bullets = new bullet[MAX_BULLETS];
 
   // Tracks how many frames since the enemies' last move.
   // Delay until next move #defined as ENEMY_MS
   int *lastEnemyMove = new int(0);
 
   playerShip *player = new playerShip();
+  int *beam_frames_rendered = new int(0);
 }
+
+/**
+ * Anything below this point is legacy.
+ * Before, there were two pthreads driving the software that called
+ * the following functions to process their data. There were some
+ * crazy issues with screen tearing on certain systems, hence
+ * why it's not been collated into the main file.
+ *
+ * I figure the performance gained by multithreading isn't worth
+ * the headaches with trying to implement mutexes for an OOP project.
+ *
+ * If you're really keen to multithread, you can utilise the namespace
+ * and its functions by modifying the main() function to the following:
+
+    glib::curses->startCurses();
+
+    glib::screenHandle->menu();
+
+    pthread_t screen;
+    pthread_t process;
+
+    pthread_create(&screen, NULL, drivers::screen, (void*) 0);
+    pthread_create(&process, NULL, drivers::process, (void*) 0);
+
+    pthread_join(screen, NULL);
+    pthread_join(process, NULL);
+ 
+ *
+ * Don't forget to include <pthreads.h>! Have fun!
+ *
+ **/
 
 namespace drivers {
   void *screen(void*);
@@ -81,9 +112,6 @@ void *drivers::screen(void *nothing) {
         werase(window);
         glib::screenHandle->drawBorder(window, '+', '|', '-');
 
-        // === 1(a). Testing Phase ===
-        // mvwprintw(window, 0, 0, "%i %i", data::landers[0].getY(), data::player->getY() - 2);
-
         // === 2. Render Enemies on Screen ===
         glib::render->renderEnemies(window);
         
@@ -91,9 +119,12 @@ void *drivers::screen(void *nothing) {
         glib::render->renderPlayer(window);
 
         // === 4. Render Bullets on Screen ===
+        glib::render->renderBullets(window);
+        glib::render->renderBeam(window);
 
         // === 5. Refresh Window ===
         // Slight fix for windows, which doesnt hide the cursor.
+        // Move the cursor to position 0, 0.
         wmove(window, 0, 0);
 
         wrefresh(window);
@@ -127,8 +158,7 @@ void *drivers::process(void *nothing) {
      *   1. Process input data/move player
      * (Note : Following functions only to be run if in-game)
      *   2. Move Enemies
-     *   3. Move Bullets
-     *   4. Check if bullets hit target and process
+     *   3. Process Bullets (Moves and checks hit of bullets.)
      */
 
     // === 1. Process input data/move player ===
@@ -138,6 +168,9 @@ void *drivers::process(void *nothing) {
     }
 
     if (glib::screenHandle->getCurrentScreen() == 'g') {
+      // === 1(a). Process player ===
+      data::player->onTick();
+
       // === 2. Move Enemies ===
       int *lem = data::lastEnemyMove;
       (*lem)++;
@@ -172,9 +205,9 @@ void *drivers::process(void *nothing) {
         // Also at this point, we're going to check if the game is complete
         // or not, if the enemies have reached the player, or the player
         // has killed all the enemies.
-        bool braniacs_alive = 0;
-        bool tanks_alive = 0;
-        bool landers_alive = 0;
+        int braniacs_alive = 0;
+        int tanks_alive = 0;
+        int landers_alive = 0;
 
         int braniacs_y = data::braniacs[0].getY();
         int tanks_y = data::landers[0].getY();
@@ -207,6 +240,13 @@ void *drivers::process(void *nothing) {
           glib::screenHandle->die();
         } else if (braniacs_alive && braniacs_y >= data::player->getY() - 2) {
           glib::screenHandle->die();
+        }
+
+        // === 3. Process Bullets ===
+        for (int i = 0; i < MAX_BULLETS; ++i) {
+          if (data::bullets[i].onTick()) {
+            data::bullets[i].blank();
+          }
         }
 
       }

@@ -8,11 +8,11 @@ void entity::setY(int y) {
   this->pos_y = y;
 }
 
-int entity::getX() {
+int entity::getX() const {
   return this->pos_x;
 }
 
-int entity::getY() {
+int entity::getY() const {
   return this->pos_y;
 }
 
@@ -28,7 +28,7 @@ void entity::setMoveSpeed(int speed) {
   this->move_speed = speed;
 }
 
-int entity::getMoveSpeed() {
+int entity::getMoveSpeed() const {
   return this->move_speed;
 }
 
@@ -40,22 +40,26 @@ void entity::removeHealth(int health) {
   this->health -= health;
 }
 
-int entity::getHealth() {
+int entity::getHealth() const {
   return this->health;
 }
 
-bool entity::isDead() {
+bool entity::isDead() const {
   if (this->health <= 0) {
     return true;
   }
   return false;
 }
 
+bool entity::isAlive() const {
+  return !this->isDead();
+}
+
 void entity::setDisplay(std::string display) {
   this->display = display;
 }
 
-std::string entity::getDisplay() {
+std::string entity::getDisplay() const {
   return this->display;
 }
 

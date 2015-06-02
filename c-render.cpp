@@ -1,9 +1,11 @@
+#include "config.h"
+
 #include "c-render.h"
 #include "c-globals.h"
 
 #include <string>
 
-void renderEngine::renderBraniacs(WINDOW* window) {
+void renderEngine::renderBraniacs(WINDOW* window) const {
   int start_x, start_y;
   for (int i = 0; i < 5; ++i) {
     if (data::braniacs[i].isDead())
@@ -21,7 +23,7 @@ void renderEngine::renderBraniacs(WINDOW* window) {
   }
 }
 
-void renderEngine::renderLanders(WINDOW* window) {
+void renderEngine::renderLanders(WINDOW* window) const {
   int start_x, start_y;
   for (int i = 0; i < 5; ++i) {
     if (data::landers[i].isDead())
@@ -39,7 +41,7 @@ void renderEngine::renderLanders(WINDOW* window) {
   }
 }
 
-void renderEngine::renderTanks(WINDOW* window) {
+void renderEngine::renderTanks(WINDOW* window) const {
   int start_x, start_y;
   for (int i = 0; i < 5; ++i) {
     if (data::tanks[i].isDead())
@@ -57,20 +59,35 @@ void renderEngine::renderTanks(WINDOW* window) {
   }
 }
 
-void renderEngine::renderEnemies(WINDOW* window) {
+void renderEngine::renderEnemies(WINDOW* window) const {
   this->renderBraniacs(window);
   this->renderLanders(window);
   this->renderTanks(window);
 }
 
-void renderEngine::renderPlayer(WINDOW* window) {
+void renderEngine::renderPlayer(WINDOW* window) const {
   int start_y = data::player->getY() - 1;
   int start_x = data::player->getX() - 2;
-
-  data::player->onTick();
 
   for (int y = 0; y < 3; ++y) {
     mvwprintw(window, start_y + y, start_x, "%s",
       data::player->getDisplay().substr(y * 5, 5).data());
+  }
+}
+
+void renderEngine::renderBullets(WINDOW* window) const {
+  for (int i = 0; i < MAX_BULLETS; ++i) {
+    data::bullets[i].render(window);
+  }
+}
+
+void renderEngine::renderBeam(WINDOW* window) const {
+  if (*(data::beam_frames_rendered) > 0) {
+
+    int x = data::player->getX() - 1;
+
+    for (int y = 1; y < data::player->getY() - 2; ++y) {
+      mvwprintw(window, y, x, "i#i");
+    }
   }
 }

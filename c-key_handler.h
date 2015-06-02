@@ -4,7 +4,7 @@
 #include "c-screen_events.h"
 
 struct keyHandler {
-  void handleKey(char);
+  void handleKey(char) const;
 };
 
 #endif

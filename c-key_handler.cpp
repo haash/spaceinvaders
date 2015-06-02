@@ -11,7 +11,7 @@
 #include "c-default.h"
 #include "c-swift.h"
 
-void keyHandler::handleKey(char key) {
+void keyHandler::handleKey(char key) const {
   switch (glib::screenHandle->getCurrentScreen()) {
     // Menu key handler.
     case 'm':
@@ -58,8 +58,9 @@ void keyHandler::handleKey(char key) {
             data::player->moveRight();
           break;
 
-        case 'x':
-          glib::screenHandle->win();
+        // fire a bullet
+        case ' ':
+          if (data::player->canFire()) data::player->fire();
           break;
       }
 
@@ -76,7 +77,7 @@ void keyHandler::handleKey(char key) {
           exit(1);
           break;
 
-        default:
+        case 'm':
           glib::screenHandle->menu();
           break;
       }

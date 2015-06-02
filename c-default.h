@@ -5,6 +5,8 @@
 
 class defaultShip : public playerShip {
 public:
+  void fire();
+  
   defaultShip();
 };
 

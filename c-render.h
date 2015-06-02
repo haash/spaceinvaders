@@ -4,15 +4,16 @@
 #include <curses.h>
 
 struct renderEngine {
-  void renderBraniacs(WINDOW*);
-  void renderLanders(WINDOW*);
-  void renderTanks(WINDOW*);
+  void renderBraniacs(WINDOW*) const;
+  void renderLanders(WINDOW*) const;
+  void renderTanks(WINDOW*) const;
 
-  void renderEnemies(WINDOW*);
+  void renderEnemies(WINDOW*) const;
 
-  void renderPlayer(WINDOW*);
+  void renderPlayer(WINDOW*) const;
 
-  void renderBullets(WINDOW*);
+  void renderBullets(WINDOW*) const;
+  void renderBeam(WINDOW*) const;
 };
 
 #endif

@@ -17,22 +17,24 @@ public:
   void setX(int);
   void setY(int);
 
-  int getX();
-  int getY();
+  int getX() const;
+  int getY() const;
 
   virtual void moveLeft();
   virtual void moveRight(); 
 
   void setMoveSpeed(int); // number of pixels to move when move*() called.
-  int getMoveSpeed();
+  int getMoveSpeed() const;
 
   void setHealth(int);
   void removeHealth(int);
-  int getHealth();
-  bool isDead();
+  int getHealth() const;
+
+  bool isDead() const;
+  bool isAlive() const;
 
   void setDisplay(std::string);
-  std::string getDisplay();
+  std::string getDisplay() const;
 
   virtual void onTick();
 
