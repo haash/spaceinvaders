@@ -32,6 +32,8 @@ namespace data {
 
   extern playerShip *player; // undefined at this stage
   extern int *beam_frames_rendered;
+
+  extern int *score;
 };
 
 // Legacy, see "c-globals.cpp" for reference.

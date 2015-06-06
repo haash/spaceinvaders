@@ -38,4 +38,6 @@ namespace data {
 
   playerShip *player = new playerShip();
   int *beam_frames_rendered = new int(0);
+
+  int *score = new int(0);
 }

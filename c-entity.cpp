@@ -1,3 +1,4 @@
+#include "c-globals.h"
 #include "c-entity.h"
 
 void entity::setX(int x) {
@@ -37,6 +38,7 @@ void entity::setHealth(int health) {
 }
 
 void entity::removeHealth(int health) {
+  (*data::score) += health;
   this->health -= health;
 }
 

@@ -255,12 +255,13 @@ void screenEvents::die() {
 
   int window_start_x = COLS / 6;
   int window_width = 4 * COLS / 6;
-  WINDOW *main = this->createWindowWithBorder(8, window_width,
+  WINDOW *main = this->createWindowWithBorder(9, window_width,
                                               LINES / 2 - 4, window_start_x);
 
   this->printCenter(main, 2, "You have died.");
+  mvwprintw(main, 4, 2, "You scored: %i", *data::score);
 
-  this->printWrapped(main, 4, 2, 
+  this->printWrapped(main, 5, 2, 
     "Press \"x\" or \"q\" to quit the game. Otherwise, press \"m\" to "
     "go back to the menu.");
 
@@ -274,12 +275,13 @@ void screenEvents::win() {
 
   int window_start_x = COLS / 6;
   int window_width = 4 * COLS / 6;
-  WINDOW *main = this->createWindowWithBorder(8, window_width,
+  WINDOW *main = this->createWindowWithBorder(9, window_width,
                                               LINES / 2 - 4, window_start_x);
 
   this->printCenter(main, 2, "Congratulations, you won!");
+  mvwprintw(main, 4, 2, "You scored: %i", *data::score);
 
-  this->printWrapped(main, 4, 2, 
+  this->printWrapped(main, 5, 2, 
     "Press \"x\" or \"q\" to quit the game. Otherwise, press \"m\" to "
     "go back to the menu.");
 
